@@ -76,31 +76,33 @@ export default function App() {
   };
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Check file size (OCR.space free tier has 1MB limit)
-    if (file.size > 1024 * 1024) {
-      alert('File size too large. Please use an image smaller than 1MB or get an API key for larger files.');
-      return;
-    }
-    
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    // Compress image to be under 1MB
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1024, // Optional resizing
+      useWebWorker: true,
+    };
+    const compressedFile = await imageCompression(file, options);
+
     setLoading(true);
     setImageText('');
     setImageDecryptedText('');
-    
-    try {
-      const extractedText = await processWithOCRSpace(file);
-      const cleaned = extractedText.replace(/\r\n/g, ' ').replace(/\n/g, ' ').trim();
-      setImageText(cleaned);
-      setImageDecryptedText(decrypt(cleaned));
-    } catch (err) {
-      console.error('OCR Error:', err);
-      setImageText(`Error: ${err.message}`);
-    }
-    
+
+    const extractedText = await processWithOCRSpace(compressedFile);
+    const cleaned = extractedText.replace(/\r\n/g, ' ').replace(/\n/g, ' ').trim();
+    setImageText(cleaned);
+    setImageDecryptedText(decrypt(cleaned));
+  } catch (err) {
+    console.error('OCR Error:', err);
+    setImageText(`Error: ${err.message}`);
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden p-6">
