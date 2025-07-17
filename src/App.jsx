@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-
+import imageCompression from 'browser-image-compression';
 const cipherMap = {
   A: 'Q', B: 'W', C: 'E', D: 'R', E: 'T',
   F: 'Y', G: 'U', H: 'I', I: 'O', J: 'P',
