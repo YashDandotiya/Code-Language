@@ -75,24 +75,34 @@ export default function App() {
     }
   };
 
-  const handleImageUpload = async (e) => {
+const handleImageUpload = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
   try {
-    // Compress image to be under 1MB
+    // Compress image
     const options = {
       maxSizeMB: 1,
-      maxWidthOrHeight: 1024, // Optional resizing
+      maxWidthOrHeight: 1024,
       useWebWorker: true,
     };
     const compressedFile = await imageCompression(file, options);
+
+    // Fix: create a new File object with extension
+    const fixedFile = new File(
+      [compressedFile],
+      file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') ? 'compressed.jpg' : 'compressed.png',
+      {
+        type: compressedFile.type || 'image/jpeg',
+        lastModified: Date.now(),
+      }
+    );
 
     setLoading(true);
     setImageText('');
     setImageDecryptedText('');
 
-    const extractedText = await processWithOCRSpace(compressedFile);
+    const extractedText = await processWithOCRSpace(fixedFile);
     const cleaned = extractedText.replace(/\r\n/g, ' ').replace(/\n/g, ' ').trim();
     setImageText(cleaned);
     setImageDecryptedText(decrypt(cleaned));
@@ -103,6 +113,7 @@ export default function App() {
     setLoading(false);
   }
 };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden p-6">
